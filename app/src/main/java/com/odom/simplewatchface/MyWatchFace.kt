@@ -4,27 +4,19 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
-import android.graphics.Paint
-import android.graphics.Rect
+import android.graphics.*
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
-import androidx.palette.graphics.Palette
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
+import android.text.format.DateFormat
 import android.view.SurfaceHolder
 import android.widget.Toast
-
+import androidx.palette.graphics.Palette
 import java.lang.ref.WeakReference
-import java.util.Calendar
-import java.util.TimeZone
+import java.util.*
 
 /**
  * Updates rate in milliseconds for interactive mode. We update once a second to advance the
@@ -61,6 +53,7 @@ private const val SHADOW_RADIUS = 6f
 class MyWatchFace : CanvasWatchFaceService() {
 
     override fun onCreateEngine(): Engine {
+        /* provide your watch face implementation */
         return Engine()
     }
 
@@ -77,6 +70,7 @@ class MyWatchFace : CanvasWatchFaceService() {
         }
     }
 
+    /* implement service callback methods */
     inner class Engine : CanvasWatchFaceService.Engine() {
 
         private lateinit var mCalendar: Calendar
@@ -118,6 +112,7 @@ class MyWatchFace : CanvasWatchFaceService() {
             }
         }
 
+        /* initialize your watch face */
         override fun onCreate(holder: SurfaceHolder) {
             super.onCreate(holder)
 
@@ -137,6 +132,7 @@ class MyWatchFace : CanvasWatchFaceService() {
             mBackgroundPaint = Paint().apply {
                 color = Color.BLACK
             }
+            // 배경
             mBackgroundBitmap =
                 BitmapFactory.decodeResource(resources, R.drawable.watchface_service_bg)
 
@@ -213,11 +209,13 @@ class MyWatchFace : CanvasWatchFaceService() {
             )
         }
 
+        /* the time changed */
         override fun onTimeTick() {
             super.onTimeTick()
             invalidate()
         }
 
+        // Always On Display 설정
         override fun onAmbientModeChanged(inAmbientMode: Boolean) {
             super.onAmbientModeChanged(inAmbientMode)
             mAmbient = inAmbientMode
@@ -372,17 +370,21 @@ class MyWatchFace : CanvasWatchFaceService() {
             drawWatchFace(canvas)
         }
 
+        // 배경 그리기
+        // 일단 검은색
         private fun drawBackground(canvas: Canvas) {
 
-            if (mAmbient && (mLowBitAmbient || mBurnInProtection)) {
-                canvas.drawColor(Color.BLACK)
-            } else if (mAmbient) {
-                canvas.drawBitmap(mGrayBackgroundBitmap, 0f, 0f, mBackgroundPaint)
-            } else {
-                canvas.drawBitmap(mBackgroundBitmap, 0f, 0f, mBackgroundPaint)
-            }
+//            if (mAmbient && (mLowBitAmbient || mBurnInProtection)) {
+//                canvas.drawColor(Color.BLACK)
+//            } else if (mAmbient) {
+//                canvas.drawBitmap(mGrayBackgroundBitmap, 0f, 0f, mBackgroundPaint)
+//            } else {
+//                canvas.drawBitmap(mBackgroundBitmap, 0f, 0f, mBackgroundPaint)
+//            }
+            canvas.drawColor(Color.BLACK)
         }
 
+        // 시침 분침 초침 그리기
         private fun drawWatchFace(canvas: Canvas) {
 
             /*
@@ -408,6 +410,7 @@ class MyWatchFace : CanvasWatchFaceService() {
              * These calculations reflect the rotation in degrees per unit of time, e.g.,
              * 360 / 60 = 6 and 360 / 12 = 30.
              */
+            // mCalendar.timeInMillis = now
             val seconds =
                 mCalendar.get(Calendar.SECOND) + mCalendar.get(Calendar.MILLISECOND) / 1000f
             val secondsRotation = seconds * 6f
@@ -417,11 +420,38 @@ class MyWatchFace : CanvasWatchFaceService() {
             val hourHandOffset = mCalendar.get(Calendar.MINUTE) / 2f
             val hoursRotation = mCalendar.get(Calendar.HOUR) * 30 + hourHandOffset
 
+            // Draw the hours.
+            val mXOffset = resources.getDimension(R.dimen.digital_x_offset_round)
+            val mYOffset = resources.getDimension(R.dimen.digital_y_offset)
+            var x: Float = mXOffset
+            val hourString: String
+            val is24Hour = DateFormat.is24HourFormat(this@MyWatchFace)
+            if (is24Hour) {
+                hourString = String.format("%02d", mCalendar[Calendar.HOUR_OF_DAY])
+            } else {
+                var hour = mCalendar[Calendar.HOUR]
+                if (hour == 0) {
+                    hour = 12
+                }
+                hourString = hour.toString()
+            }
+            canvas.drawText(hourString, x, mYOffset, mHourPaint)
+            x += mHourPaint.measureText(hourString)
+
+            canvas.drawText(":", x, mYOffset, mHourPaint)
+            x += mHourPaint.measureText(":")
+
+            // Draw the minutes.
+            val minuteString: String = String.format("%02d", mCalendar[Calendar.MINUTE])
+            canvas.drawText(minuteString, x, mYOffset, mMinutePaint)
+            x += mMinutePaint.measureText(minuteString)
+
             /*
              * Save the canvas state before we can begin to rotate it.
              */
             canvas.save()
 
+            // 시침
             canvas.rotate(hoursRotation, mCenterX, mCenterY)
             canvas.drawLine(
                 mCenterX,
@@ -431,6 +461,7 @@ class MyWatchFace : CanvasWatchFaceService() {
                 mHourPaint
             )
 
+            // 분침
             canvas.rotate(minutesRotation - hoursRotation, mCenterX, mCenterY)
             canvas.drawLine(
                 mCenterX,
@@ -444,6 +475,7 @@ class MyWatchFace : CanvasWatchFaceService() {
              * Ensure the "seconds" hand is drawn only when we are in interactive mode.
              * Otherwise, we only update the watch face once a minute.
              */
+            // 초침
             if (!mAmbient) {
                 canvas.rotate(secondsRotation - minutesRotation, mCenterX, mCenterY)
                 canvas.drawLine(
