@@ -19,6 +19,12 @@
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="false"/>
 
         <service
             android:name=".MyWatchFace"
@@ -48,10 +54,10 @@
 
             <meta-data
                 android:name="com.google.android.wearable.watchface.companionConfigurationAction"
-                android:value="com.odom.app.CONFIG_DIGITAL"/>
+                android:value="com.odom.simplewatchface.CONFIG_DIGITAL"/>
             <meta-data
                 android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
-                android:value="com.odom.app.CONFIG_DIGITAL"/>
+                android:value="com.odom.simplewatchface.CONFIG_DIGITAL"/>
 
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
@@ -62,17 +68,28 @@
 
         <activity
             android:name=".config.DigitalWatchFaceWearableConfigActivity"
-            android:label="@string/digital_config_name">
+            android:label="@string/digital_config_name"
+            android:exported="false">
             <intent-filter>
-                <action android:name="com.odom.app.CONFIG_DIGITAL"/>
+                <action android:name="com.odom.simplewatchface.CONFIG_DIGITAL"/>
                 <category android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
+        <service android:name=".config.DigitalWatchFaceConfigListenerService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED"/>
+
+                <data
+                    android:host="*"
+                    android:pathPrefix="/"
+                    android:scheme="wear"/>
+            </intent-filter>
+        </service>
+
+        <receiver android:name=".provider.ComplicationToggleReceiver"/>
+
     </application>
 
 </manifest>
