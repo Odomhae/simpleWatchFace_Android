@@ -12,7 +12,9 @@ import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.SurfaceHolder
+import android.view.WindowInsets
 import android.widget.Toast
 import androidx.palette.graphics.Palette
 import java.lang.ref.WeakReference
@@ -83,6 +85,10 @@ class MyWatchFace : CanvasWatchFaceService() {
         private var mSecondHandLength: Float = 0F
         private var sMinuteHandLength: Float = 0F
         private var sHourHandLength: Float = 0F
+
+        // 글자 배치
+        var mXOffset = 0f
+        var mYOffset = 0f
 
         /* Colors for all hands (hour, minute, seconds, ticks) based on photo loaded. */
         private var mWatchHandColor: Int = 0
@@ -362,6 +368,22 @@ class MyWatchFace : CanvasWatchFaceService() {
             invalidate()
         }
 
+        override fun onApplyWindowInsets(insets: WindowInsets?) {
+            Log.d("===TAG", "onApplyWindowInsets: " + if (insets!!.isRound) "round" else "square")
+            super.onApplyWindowInsets(insets)
+
+            val isRound = insets.isRound
+            mXOffset =
+                resources.getDimension(if (isRound) R.dimen.digital_x_offset_round else R.dimen.digital_x_offset)
+            mYOffset = resources.getDimension(R.dimen.digital_y_offset)
+
+            val textSize =
+                resources.getDimension(if (isRound) R.dimen.digital_text_size_round else R.dimen.digital_text_size)
+
+            mHourPaint.textSize = textSize
+            mMinutePaint.textSize = textSize
+        }
+
         override fun onDraw(canvas: Canvas, bounds: Rect) {
             val now = System.currentTimeMillis()
             mCalendar.timeInMillis = now
@@ -421,8 +443,6 @@ class MyWatchFace : CanvasWatchFaceService() {
             val hoursRotation = mCalendar.get(Calendar.HOUR) * 30 + hourHandOffset
 
             // Draw the hours.
-            val mXOffset = resources.getDimension(R.dimen.digital_x_offset_round)
-            val mYOffset = resources.getDimension(R.dimen.digital_y_offset)
             var x: Float = mXOffset
             val hourString: String
             val is24Hour = DateFormat.is24HourFormat(this@MyWatchFace)
