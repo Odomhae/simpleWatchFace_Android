@@ -446,15 +446,17 @@ class MyWatchFace : CanvasWatchFaceService() {
             var x: Float = mXOffset
             val hourString: String
             val is24Hour = DateFormat.is24HourFormat(this@MyWatchFace)
-            if (is24Hour) {
-                hourString = String.format("%02d", mCalendar[Calendar.HOUR_OF_DAY])
-            } else {
-                var hour = mCalendar[Calendar.HOUR]
-                if (hour == 0) {
-                    hour = 12
-                }
-                hourString = hour.toString()
-            }
+//            if (is24Hour) {
+//                hourString = String.format("%02d", mCalendar[Calendar.HOUR_OF_DAY])
+//                Log.d("===is24Hour", is24Hour.toString())
+//            } else {
+//                var hour = mCalendar[Calendar.HOUR]
+//                if (hour == 0) {
+//                    hour = 12
+//                }
+//                hourString = hour.toString()
+//            }
+            hourString = String.format("%02d", mCalendar[Calendar.HOUR_OF_DAY])
             canvas.drawText(hourString, x, mYOffset, mHourPaint)
             x += mHourPaint.measureText(hourString)
 

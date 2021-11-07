@@ -7,4 +7,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "simpleWatchFace"
+include ':wear'
 include ':app'
